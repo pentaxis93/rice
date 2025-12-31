@@ -18,7 +18,7 @@ install_rust() {
     rustup_args+=("-q")
   fi
 
-  if ! run_upstream_installer "https://sh.rustup.rs" -- "${rustup_args[@]}"; then
+  if ! run_upstream_installer "https://sh.rustup.rs" "${rustup_args[@]}"; then
     log_error "Failed to install Rust"
     state_record_tool_failed "cargo" "rustup installer failed"
     return 1
