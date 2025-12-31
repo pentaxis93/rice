@@ -553,9 +553,21 @@ install_git_lfs() {
 
 # Install opencode
 install_opencode() {
+  # Check common install locations
+  local opencode_bin=""
   if command -v opencode &>/dev/null; then
+    opencode_bin="opencode"
+  elif [[ -x "${HOME}/.local/bin/opencode" ]]; then
+    opencode_bin="${HOME}/.local/bin/opencode"
+  elif [[ -x "${HOME}/.opencode/bin/opencode" ]]; then
+    opencode_bin="${HOME}/.opencode/bin/opencode"
+  elif [[ -x "${HOME}/bin/opencode" ]]; then
+    opencode_bin="${HOME}/bin/opencode"
+  fi
+
+  if [[ -n "$opencode_bin" ]]; then
     local version
-    version=$(opencode version 2>/dev/null | head -1)
+    version=$("$opencode_bin" version 2>/dev/null | head -1)
     log_ok "opencode" "$version" "skipped"
     return 0
   fi
@@ -567,7 +579,7 @@ install_opencode() {
   export OPENCODE_INSTALL_DIR="${HOME}/.local/bin"
   if run_upstream_installer "https://opencode.ai/install"; then
     local version
-    version=$(opencode version 2>/dev/null | head -1)
+    version=$("${HOME}/.local/bin/opencode" version 2>/dev/null | head -1)
     log_ok "opencode" "$version"
     state_record_tool "opencode" "$version" "upstream"
     state_clear_current_tool
@@ -630,7 +642,8 @@ install_lf() {
   fi
 
   local archive="lf-linux-${RICE_ARCH_GO}.tar.gz"
-  local url="https://github.com/gokcehan/lf/releases/download/r${version}/${archive}"
+  # lf tags are like "r40" - version already includes the 'r' prefix
+  local url="https://github.com/gokcehan/lf/releases/download/${version}/${archive}"
 
   # Download (lf uses MD5 which we don't verify)
   local tmp_archive
