@@ -16,9 +16,18 @@
 
 set -euo pipefail
 
-# Determine script location (works for both direct run and curl|bash)
+# Determine script location (works for direct run, symlink, and curl|bash)
 if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
-  RICE_INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # Resolve symlinks to find the real script location
+  _rice_script="${BASH_SOURCE[0]}"
+  while [[ -L "$_rice_script" ]]; do
+    _rice_dir="$(cd "$(dirname "$_rice_script")" && pwd)"
+    _rice_script="$(readlink "$_rice_script")"
+    # Handle relative symlinks
+    [[ "$_rice_script" != /* ]] && _rice_script="$_rice_dir/$_rice_script"
+  done
+  RICE_INSTALL_DIR="$(cd "$(dirname "$_rice_script")" && pwd)"
+  unset _rice_script _rice_dir
 else
   # Running from curl | bash - need to download
   RICE_INSTALL_DIR="${HOME}/.cache/rice/installer"
@@ -195,6 +204,8 @@ print_summary() {
     echo "  1. Run 'exec zsh' to start your new shell"
     echo "  2. Install a Nerd Font on your terminal client for best experience"
     echo ""
+    echo "The 'rice' command is now available. Run 'rice help' for options."
+    echo ""
   fi
 }
 
@@ -297,6 +308,9 @@ run_install() {
   install_infrastructure || ((RICE_FAILURES++))
   deploy_configs || ((RICE_FAILURES++))
 
+  # Install rice command globally
+  install_rice_command
+
   # Verify
   verify_installation || ((RICE_FAILURES++))
 
@@ -320,12 +334,61 @@ run_status() {
   exec "${RICE_INSTALL_DIR}/bin/rice-status"
 }
 
+# Install rice command globally
+# Copies distribution to ~/.local/share/rice/ and symlinks ~/.local/bin/rice
+install_rice_command() {
+  local share_dir="${HOME}/.local/share/rice"
+  local bin_dir="${HOME}/.local/bin"
+  local rice_bin="${bin_dir}/rice"
+
+  # Ensure directories exist
+  mkdir -p "$share_dir" "$bin_dir"
+
+  # Copy distribution (excluding .git if present)
+  if [[ -d "${RICE_INSTALL_DIR}/.git" ]]; then
+    # Running from git repo - copy without .git
+    rsync -a --delete --exclude='.git' "${RICE_INSTALL_DIR}/" "$share_dir/"
+  else
+    # Running from download - copy everything
+    rsync -a --delete "${RICE_INSTALL_DIR}/" "$share_dir/"
+  fi
+
+  # Create symlink
+  ln -sf "${share_dir}/install.sh" "$rice_bin"
+  chmod +x "$rice_bin"
+
+  log_ok "rice command installed" "$rice_bin"
+}
+
 # Run update command
 run_update() {
+  local share_dir="${HOME}/.local/share/rice"
+  local tmp_dir="${HOME}/.cache/rice/update-$$"
+
   echo "Fetching latest rice..."
 
-  # Download and run latest
-  curl -fsSL "https://raw.githubusercontent.com/pentaxis93/rice/main/install.sh" | bash
+  # Download to temp location
+  mkdir -p "$tmp_dir"
+  if ! curl -fsSL "https://github.com/pentaxis93/rice/archive/refs/heads/main.tar.gz" | \
+    tar -xz -C "$tmp_dir" --strip-components=1 2>/dev/null; then
+    echo "Error: Failed to download rice"
+    rm -rf "$tmp_dir"
+    exit 1
+  fi
+
+  # Replace distribution
+  mkdir -p "$share_dir"
+  rsync -a --delete "$tmp_dir/" "$share_dir/"
+  rm -rf "$tmp_dir"
+
+  # Ensure symlink exists
+  ln -sf "${share_dir}/install.sh" "${HOME}/.local/bin/rice"
+
+  echo "Updated to $(cat "${share_dir}/VERSION" 2>/dev/null || echo "latest")"
+  echo ""
+
+  # Re-run to apply any changes
+  exec "${share_dir}/install.sh"
 }
 
 # Main entry point
@@ -357,6 +420,8 @@ main() {
         if [[ "$RICE_FIRST_RUN" != "true" ]]; then
           # Always sync configs even on re-run
           deploy_configs
+          # Ensure rice command is installed
+          install_rice_command 2>/dev/null || true
           run_compact_check
           exit 0
         fi
