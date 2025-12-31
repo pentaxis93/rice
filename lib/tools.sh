@@ -607,7 +607,7 @@ install_dev_tools() {
 # Phase 5: File Management
 #==============================================================================
 
-# Install lf
+# Install lf (upstream uses MD5 checksums which we don't support - download directly)
 install_lf() {
   if command -v lf &>/dev/null; then
     local version
@@ -616,17 +616,52 @@ install_lf() {
     return 0
   fi
 
-  install_github_binary \
-    "gokcehan/lf" \
-    "lf" \
-    "lf-linux-{RICE_ARCH_GO}.tar.gz" \
-    "lf-linux-{RICE_ARCH_GO}.tar.gz.md5" \
-    "lf" \
-    "lf"
+  state_set_current_tool "lf"
+  log_installing "lf"
 
-  # Note: lf uses MD5, we'll handle this specially
-  # For now, just download without checksum verification for lf
-  # TODO: implement MD5 support or skip checksum for lf
+  # Get latest version
+  local version
+  version=$(get_latest_release "gokcehan/lf")
+  if [[ -z "$version" ]]; then
+    log_error "Could not determine latest lf version"
+    state_record_tool_failed "lf" "version lookup failed"
+    state_clear_current_tool
+    return 1
+  fi
+
+  local archive="lf-linux-${RICE_ARCH_GO}.tar.gz"
+  local url="https://github.com/gokcehan/lf/releases/download/r${version}/${archive}"
+
+  # Download (lf uses MD5 which we don't verify)
+  local tmp_archive
+  tmp_archive=$(mktemp)
+  if ! download_file "$url" "$tmp_archive"; then
+    rm -f "$tmp_archive"
+    state_record_tool_failed "lf" "download failed"
+    state_clear_current_tool
+    return 1
+  fi
+
+  # Extract and install
+  local extract_dir
+  extract_dir=$(mktemp -d)
+  if ! tar -xzf "$tmp_archive" -C "$extract_dir"; then
+    log_error "Failed to extract lf archive"
+    rm -rf "$tmp_archive" "$extract_dir"
+    state_record_tool_failed "lf" "extraction failed"
+    state_clear_current_tool
+    return 1
+  fi
+  rm -f "$tmp_archive"
+
+  mkdir -p "${HOME}/.local/bin"
+  cp "${extract_dir}/lf" "${HOME}/.local/bin/lf"
+  chmod +x "${HOME}/.local/bin/lf"
+  rm -rf "$extract_dir"
+
+  log_ok "lf" "$version"
+  state_record_tool "lf" "$version" "binary"
+  state_clear_current_tool
 }
 
 # Install tree
