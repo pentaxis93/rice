@@ -1,7 +1,10 @@
-# rice p10k.zsh - Powerlevel10k configuration
-# https://github.com/pentaxis93/rice
-# Based on the "lean" preset, optimized for headless servers
+# rice-managed - https://github.com/pentaxis93/rice
+# Powerlevel10k Configuration (based on ACFS lean style)
+# Style: Lean (clean, no background colors)
+# Based on official p10k-lean.zsh with ACFS-friendly defaults
+# To customize further: p10k configure
 
+# Temporarily change options
 'builtin' 'local' '-a' 'p10k_config_opts'
 [[ ! -o 'aliases'         ]] || p10k_config_opts+=('aliases')
 [[ ! -o 'sh_glob'         ]] || p10k_config_opts+=('sh_glob')
@@ -14,114 +17,154 @@
   # Unset all configuration options
   unset -m '(POWERLEVEL9K_*|DEFAULT_USER)~POWERLEVEL9K_GITSTATUS_DIR'
 
-  # Prompt characters - ASCII compatible for headless servers
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=76
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIINS_CONTENT_EXPANSION='>'
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VICMD_CONTENT_EXPANSION='<'
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIVIS_CONTENT_EXPANSION='V'
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIOWR_CONTENT_EXPANSION='^'
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_OVERWRITE_STATE=true
+  # Prompt appears instantly. Disable if you experience issues.
+  typeset -g POWERLEVEL9K_INSTANT_PROMPT=verbose
 
-  # Left prompt elements
-  typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-    context                 # user@hostname
-    dir                     # current directory
-    vcs                     # git status
-    prompt_char             # prompt symbol
-  )
-
-  # Right prompt elements
-  typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
-    status                  # exit code of last command
-    command_execution_time  # duration of last command
-    background_jobs         # background jobs indicator
-    virtualenv              # python virtualenv
-    nodeenv                 # node.js environment
-  )
-
-  # Basic settings
+  # Use Nerd Font icons when available, fallback to unicode
   typeset -g POWERLEVEL9K_MODE=nerdfont-v3
-  typeset -g POWERLEVEL9K_PROMPT_ON_NEWLINE=false
-  typeset -g POWERLEVEL9K_RPROMPT_ON_NEWLINE=false
+  typeset -g POWERLEVEL9K_ICON_PADDING=moderate
+
+  # Lean style: no background, separators are spaces
+  typeset -g POWERLEVEL9K_BACKGROUND=
+  typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
+  typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '
+  typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=
+
+  # Add newline between prompts
   typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
 
-  # Directory
-  typeset -g POWERLEVEL9K_DIR_FOREGROUND=39
-  typeset -g POWERLEVEL9K_SHORTEN_STRATEGY=truncate_to_unique
-  typeset -g POWERLEVEL9K_SHORTEN_DELIMITER=
-  typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=103
-  typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=39
-  typeset -g POWERLEVEL9K_DIR_ANCHOR_BOLD=true
-  typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+  # ================================[ LEFT PROMPT ]================================
+  typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
+    dir                     # current directory
+    vcs                     # git status
+  )
+
+  # ================================[ RIGHT PROMPT ]================================
+  typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
+    status                  # exit code
+    command_execution_time  # last command duration
+    background_jobs         # background jobs indicator
+    direnv                  # direnv status
+    virtualenv              # python virtualenv
+    context                 # user@hostname (SSH/root only)
+    time                    # current time
+  )
+
+  # ================================[ DIRECTORY ]================================
+  typeset -g POWERLEVEL9K_DIR_FOREGROUND=31
+  # Shorten directory to last 3 segments
+  typeset -g POWERLEVEL9K_SHORTEN_STRATEGY=truncate_to_last
+  typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=3
   typeset -g POWERLEVEL9K_DIR_MAX_LENGTH=80
 
-  # Context (user@host) - show only when SSH or root
-  typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=180
-  typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=178
-  typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_{CONTENT,VISUAL_IDENTIFIER}_EXPANSION=
-  typeset -g POWERLEVEL9K_ALWAYS_SHOW_CONTEXT=false
-  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
-  typeset -g POWERLEVEL9K_CONTEXT_{ROOT,REMOTE,REMOTE_SUDO}_TEMPLATE='%n@%m'
+  # Directory colors
+  typeset -g POWERLEVEL9K_DIR_ANCHOR_BOLD=true
+  typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=103
 
-  # VCS (Git)
+  # ================================[ VCS / GIT ]================================
+  # Enable gitstatus for faster git info
+  typeset -g POWERLEVEL9K_VCS_DISABLED_WORKDIR_PATTERN='~'
+
+  # Branch colors
   typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=76
+  typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=76
   typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=178
-  typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=178
-  typeset -g POWERLEVEL9K_VCS_CONFLICTED_FOREGROUND=196
   typeset -g POWERLEVEL9K_VCS_LOADING_FOREGROUND=244
 
-  typeset -g POWERLEVEL9K_VCS_BRANCH_ICON=
+  # Git icons - using Nerd Font icons
+  typeset -g POWERLEVEL9K_VCS_BRANCH_ICON='\uF126 '
   typeset -g POWERLEVEL9K_VCS_UNTRACKED_ICON='?'
   typeset -g POWERLEVEL9K_VCS_UNSTAGED_ICON='!'
   typeset -g POWERLEVEL9K_VCS_STAGED_ICON='+'
   typeset -g POWERLEVEL9K_VCS_STASH_ICON='*'
-  typeset -g POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='<'
-  typeset -g POWERLEVEL9K_VCS_OUTGOING_CHANGES_ICON='>'
+  typeset -g POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='\u21E3'
+  typeset -g POWERLEVEL9K_VCS_OUTGOING_CHANGES_ICON='\u21E1'
+
+  # Formatting
+  typeset -g POWERLEVEL9K_VCS_GIT_ICON=
+  typeset -g POWERLEVEL9K_VCS_GIT_GITHUB_ICON=
+  typeset -g POWERLEVEL9K_VCS_GIT_GITLAB_ICON=
+  typeset -g POWERLEVEL9K_VCS_GIT_BITBUCKET_ICON=
+
+  # Show "on" before branch name for readability
+  typeset -g POWERLEVEL9K_VCS_PREFIX='on '
+
+  # Commit hash style
   typeset -g POWERLEVEL9K_VCS_COMMIT_ICON='@'
+  typeset -g POWERLEVEL9K_VCS_COMMITS_AHEAD_MAX_NUM=-1
+  typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_MAX_NUM=-1
 
-  # Status
+  # ================================[ STATUS ]================================
   typeset -g POWERLEVEL9K_STATUS_EXTENDED_STATES=true
-  typeset -g POWERLEVEL9K_STATUS_OK=false
-  typeset -g POWERLEVEL9K_STATUS_OK_FOREGROUND=76
+  typeset -g POWERLEVEL9K_STATUS_OK=true
+  typeset -g POWERLEVEL9K_STATUS_OK_FOREGROUND=70
+  typeset -g POWERLEVEL9K_STATUS_OK_VISUAL_IDENTIFIER_EXPANSION='✔'
   typeset -g POWERLEVEL9K_STATUS_OK_PIPE=true
-  typeset -g POWERLEVEL9K_STATUS_OK_PIPE_FOREGROUND=76
+  typeset -g POWERLEVEL9K_STATUS_OK_PIPE_FOREGROUND=70
   typeset -g POWERLEVEL9K_STATUS_ERROR=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=196
+  typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=160
+  typeset -g POWERLEVEL9K_STATUS_ERROR_VISUAL_IDENTIFIER_EXPANSION='✘'
   typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL_FOREGROUND=196
-  typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE=true
-  typeset -g POWERLEVEL9K_STATUS_ERROR_PIPE_FOREGROUND=196
+  typeset -g POWERLEVEL9K_STATUS_VERBOSE_SIGNAME=false
+  typeset -g POWERLEVEL9K_STATUS_ERROR_SIGNAL_FOREGROUND=160
 
-  # Command execution time
+  # ================================[ COMMAND EXECUTION TIME ]================================
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=3
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_PRECISION=0
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=101
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FORMAT='d h m s'
+  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_PREFIX='took '
 
-  # Background jobs
+  # ================================[ BACKGROUND JOBS ]================================
   typeset -g POWERLEVEL9K_BACKGROUND_JOBS_VERBOSE=false
   typeset -g POWERLEVEL9K_BACKGROUND_JOBS_FOREGROUND=70
 
-  # Virtualenv
+  # ================================[ DIRENV ]================================
+  typeset -g POWERLEVEL9K_DIRENV_FOREGROUND=178
+
+  # ================================[ VIRTUALENV ]================================
   typeset -g POWERLEVEL9K_VIRTUALENV_FOREGROUND=37
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_PYTHON_VERSION=false
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_WITH_PYENV=false
   typeset -g POWERLEVEL9K_VIRTUALENV_{LEFT,RIGHT}_DELIMITER=
 
-  # Nodeenv
-  typeset -g POWERLEVEL9K_NODEENV_FOREGROUND=70
+  # ================================[ CONTEXT (user@host) ]================================
+  # Only show in SSH sessions or as root
+  typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_{CONTENT,VISUAL_IDENTIFIER}_EXPANSION=
+  typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=178
+  typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n@%m'
+  typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_FOREGROUND=180
+  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
 
-  # Transient prompt
+  # ================================[ TIME ]================================
+  typeset -g POWERLEVEL9K_TIME_FOREGROUND=66
+  typeset -g POWERLEVEL9K_TIME_FORMAT='at %D{%I:%M:%S %p}'
+  typeset -g POWERLEVEL9K_TIME_UPDATE_ON_COMMAND=false
+
+  # ================================[ PROMPT CHAR ]================================
+  # Prompt symbol: ❯ for normal, ❮ for vi command mode
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=76
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIINS_CONTENT_EXPANSION='❯'
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VICMD_CONTENT_EXPANSION='❮'
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIVIS_CONTENT_EXPANSION='V'
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIOWR_CONTENT_EXPANSION='▶'
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OVERWRITE_STATE=true
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL=
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL=
+
+  # ================================[ TRANSIENT PROMPT ]================================
+  # Make previous prompts simpler
   typeset -g POWERLEVEL9K_TRANSIENT_PROMPT=off
 
-  # Instant prompt mode
-  typeset -g POWERLEVEL9K_INSTANT_PROMPT=verbose
-
-  # Hot reload
-  typeset -g POWERLEVEL9K_DISABLE_HOT_RELOAD=true
-
-  # Finish initialization
-  (( ${#p10k_config_opts} )) && setopt ${p10k_config_opts[@]}
-  'builtin' 'unset' 'p10k_config_opts'
+  # ================================[ INSTANT PROMPT ]================================
+  # This is the top of ~/.zshrc content for instant prompt
+  typeset -g POWERLEVEL9K_INSTANT_PROMPT_COMMAND_LINES=1
 }
+
+# Restore original shell options
+(( ${#p10k_config_opts} )) && setopt ${p10k_config_opts[@]}
+'builtin' 'unset' 'p10k_config_opts'
+
+# Hot reload if p10k is already loaded
+(( ! $+functions[p10k] )) || p10k reload
