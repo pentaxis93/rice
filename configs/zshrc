@@ -1,0 +1,111 @@
+# rice zshrc - managed by rice
+# https://github.com/pentaxis93/rice
+# Do not edit - changes will be overwritten on rice update
+# For customizations, use ~/.zshrc.local
+
+# >>> rice: instant-prompt >>>
+# Enable Powerlevel10k instant prompt for fast shell startup
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+# <<< rice: instant-prompt <<<
+
+# >>> rice: path >>>
+# Ensure all tool directories are in PATH
+typeset -U path  # Unique entries only
+
+# User local binaries (highest priority)
+path=(~/.local/bin $path)
+
+# Cargo (Rust)
+[[ -d ~/.cargo/bin ]] && path=(~/.cargo/bin $path)
+
+# Go
+[[ -d /usr/local/go/bin ]] && path=(/usr/local/go/bin $path)
+[[ -d ~/go/bin ]] && path=(~/go/bin $path)
+
+# Bun
+[[ -d ~/.bun/bin ]] && path=(~/.bun/bin $path)
+
+# Atuin
+[[ -d ~/.atuin/bin ]] && path=(~/.atuin/bin $path)
+
+export PATH
+# <<< rice: path <<<
+
+# >>> rice: oh-my-zsh >>>
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# Disable auto-update prompts (rice handles updates)
+zstyle ':omz:update' mode disabled
+
+# Plugins
+plugins=(
+  git
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
+source $ZSH/oh-my-zsh.sh
+# <<< rice: oh-my-zsh <<<
+
+# >>> rice: p10k >>>
+# Load Powerlevel10k configuration
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# Disable configuration wizard
+POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
+# <<< rice: p10k <<<
+
+# >>> rice: zoxide >>>
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+# <<< rice: zoxide <<<
+
+# >>> rice: atuin >>>
+if command -v atuin &>/dev/null; then
+  eval "$(atuin init zsh --disable-up-arrow)"
+fi
+# <<< rice: atuin <<<
+
+# >>> rice: direnv >>>
+if command -v direnv &>/dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+# <<< rice: direnv <<<
+
+# >>> rice: fzf >>>
+if command -v fzf &>/dev/null; then
+  # Use fd for fzf if available
+  if command -v fd &>/dev/null; then
+    export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+  fi
+
+  # fzf keybindings and completion
+  [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+  [[ -f /usr/share/doc/fzf/examples/completion.zsh ]] && source /usr/share/doc/fzf/examples/completion.zsh
+fi
+# <<< rice: fzf <<<
+
+# >>> rice: aliases >>>
+[[ -f ~/.config/rice/aliases.sh ]] && source ~/.config/rice/aliases.sh
+# <<< rice: aliases <<<
+
+# >>> rice: welcome >>>
+# Show welcome message on first shell after install
+if [[ ! -f ~/.config/rice/.welcomed ]]; then
+  if [[ -f ~/.config/rice/welcome.txt ]]; then
+    cat ~/.config/rice/welcome.txt
+    touch ~/.config/rice/.welcomed
+  fi
+fi
+# <<< rice: welcome <<<
+
+# >>> rice: local >>>
+# Load user customizations (not managed by rice)
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+# <<< rice: local <<<
