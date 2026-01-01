@@ -1,10 +1,15 @@
 # rice
 
-Opinionated terminal environment for headless servers. One command sets up a complete modern shell.
+Opinionated terminal environment for servers and workstations. One command sets up a complete modern shell.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/pentaxis93/rice/main/install.sh | bash
 ```
+
+> [!WARNING]
+> **Rice is aggressive.** It will replace existing configurations for **Helix**, **Tmux**, **lf**, and **Powerlevel10k**.
+> Old configs are backed up to `~/.config/rice/backups/`, but `rice` is designed to control these files.
+> `~/.zshrc` and `~/.gitconfig` are treated more gently (appended/included).
 
 ## What You Get
 
