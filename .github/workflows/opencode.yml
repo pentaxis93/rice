@@ -5,9 +5,12 @@ on:
     types: [created]
   pull_request_review_comment:
     types: [created]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
-  opencode:
+  # Existing job for /oc commands
+  opencode-command:
     if: |
       contains(github.event.comment.body, ' /oc') ||
       startsWith(github.event.comment.body, '/oc') ||
@@ -26,6 +29,25 @@ jobs:
       - name: Run opencode
         uses: sst/opencode/github@latest
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: openai/gpt-5.1-codex-max
+          model: opencode/minimax-m2.1-free
+
+  # Auto-review on PR open/update
+  opencode-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run opencode
+        uses: sst/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/minimax-m2.1-free
