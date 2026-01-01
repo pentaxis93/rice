@@ -19,6 +19,10 @@ on:
   schedule:
     - cron: '0 9 * * 1'  # Every Monday at 9am UTC
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}
+  cancel-in-progress: true
+
 jobs:
   # Respond to /oc commands
   opencode-command:
@@ -126,3 +130,4 @@ jobs:
             For any issues worth addressing, open a GitHub issue to track them.
             Group related items into single issues where appropriate.
             Skip trivial TODOs that are just notes.
+
